@@ -1,7 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { needs } from "../services/data";
 
 function NGO() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role !== "ngo") {
+      navigate("/login");
+    }
+  }, []);
+
   const [form, setForm] = useState({
     title: "",
     location: "",
@@ -19,35 +29,41 @@ function NGO() {
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow">
-      <h2 className="text-xl font-bold mb-4">Post a Need</h2>
+    <div className="max-w-lg mx-auto bg-white/5 border border-white/10 p-6 rounded-2xl space-y-3">
 
-      <input className="border p-2 w-full mb-3 rounded"
-        placeholder="Title"
-        onChange={e => setForm({...form, title: e.target.value})}
+      <h2 className="text-xl font-bold">Post a Need</h2>
+
+      <input placeholder="Title"
+        className="bg-white/10 p-2 w-full rounded"
+        onChange={e => setForm({ ...form, title: e.target.value })}
       />
 
-      <input className="border p-2 w-full mb-3 rounded"
-        placeholder="Location"
-        onChange={e => setForm({...form, location: e.target.value})}
+      <input placeholder="Location"
+        className="bg-white/10 p-2 w-full rounded"
+        onChange={e => setForm({ ...form, location: e.target.value })}
       />
 
-      <select className="border p-2 w-full mb-3 rounded"
-        onChange={e => setForm({...form, urgency: e.target.value})}
+      <select
+        className="bg-white/10 p-2 w-full rounded"
+        onChange={e => setForm({ ...form, urgency: e.target.value })}
       >
         <option>Low</option>
         <option>Medium</option>
         <option>High</option>
       </select>
 
-      <input className="border p-2 w-full mb-3 rounded"
-        placeholder="Skills (comma separated)"
-        onChange={e => setForm({...form, skills: e.target.value})}
+      <input placeholder="Skills"
+        className="bg-white/10 p-2 w-full rounded"
+        onChange={e => setForm({ ...form, skills: e.target.value })}
       />
 
-      <button className="bg-blue-600 hover:bg-blue-700 text-white w-full py-2 rounded">
+      <button
+        onClick={handleSubmit}
+        className="bg-blue-600 w-full py-2 rounded-xl hover:scale-105 transition"
+      >
         Submit
       </button>
+
     </div>
   );
 }
