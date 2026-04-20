@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { needs } from "../services/data";
+import { motion } from "framer-motion";
 
 function Volunteer() {
   const [skills, setSkills] = useState("");
@@ -30,35 +31,50 @@ function Volunteer() {
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
+    <div className="max-w-lg mx-auto space-y-6">
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-2xl shadow-xl"
+      >
         <h2 className="text-xl font-bold mb-4">Find Opportunities</h2>
 
-        <input className="border p-2 w-full mb-3 rounded"
+        <input
+          className="bg-white/10 border border-white/20 p-2 w-full mb-3 rounded text-white placeholder-gray-400"
           placeholder="Your Skills"
           onChange={e => setSkills(e.target.value)}
         />
 
-        <input className="border p-2 w-full mb-3 rounded"
+        <input
+          className="bg-white/10 border border-white/20 p-2 w-full mb-3 rounded text-white placeholder-gray-400"
           placeholder="Your Location"
           onChange={e => setLocation(e.target.value)}
         />
 
         <button
-          className="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded"
           onClick={findMatches}
+          className="bg-green-600 hover:bg-green-700 w-full py-2 rounded-xl shadow-md transition hover:scale-105"
         >
           Find Matches
         </button>
-      </div>
+      </motion.div>
 
       <div className="space-y-3">
         {matches.map((m, i) => (
-          <div key={i} className="bg-white p-4 rounded-xl shadow">
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white/5 backdrop-blur-lg border border-white/10 p-4 rounded-2xl hover:scale-105 hover:border-green-400 transition"
+          >
             <div className="font-bold text-lg">{m.title}</div>
-            <div className="text-sm text-gray-500">{m.location}</div>
-            <div className="text-sm">Score: {m.score}</div>
-          </div>
+            <div className="text-sm text-gray-400">{m.location}</div>
+            <div className="text-green-400 font-semibold mt-1">
+              Score: {m.score}
+            </div>
+          </motion.div>
         ))}
       </div>
     </div>
