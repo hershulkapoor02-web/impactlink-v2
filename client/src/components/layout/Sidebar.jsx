@@ -10,6 +10,7 @@ const ROLE_CONFIG = {
     nav: [
       { to: '/volunteer',               label: 'Dashboard',      icon: '⊞', end: true },
       { to: '/volunteer/tasks',         label: 'Browse Tasks',   icon: '◫' },
+      { to: '/volunteer/live',          label: 'Live Missions',  icon: '⚡' },
       { to: '/volunteer/my-tasks',      label: 'My Tasks',       icon: '✓' },
       { to: '/volunteer/matches',       label: 'Best Matches',   icon: '✦' },
       { to: '/volunteer/checkin',       label: 'Check In',       icon: '📍' },

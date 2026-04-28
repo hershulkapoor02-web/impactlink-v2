@@ -16,6 +16,7 @@ import VolunteerMyTasks     from './pages/volunteer/MyTasks'
 import VolunteerMatches     from './pages/volunteer/Matches'
 import VolunteerCheckin     from './pages/volunteer/Checkin'
 import VolunteerCertificate from './pages/volunteer/Certificate'
+import LiveMissions        from './pages/volunteer/LiveMissions'
 import VolunteerLeaderboard from './pages/volunteer/Leaderboard'
 import VolunteerNotifs      from './pages/volunteer/Notifications'
 import VolunteerProfile     from './pages/volunteer/Profile'
@@ -78,6 +79,7 @@ export default function App() {
               <Route path="/volunteer/matches"       element={<VolunteerMatches />} />
               <Route path="/volunteer/checkin"       element={<VolunteerCheckin />} />
               <Route path="/volunteer/certificate"   element={<VolunteerCertificate />} />
+              <Route path="/volunteer/live"          element={<LiveMissions />} />
               <Route path="/volunteer/leaderboard"   element={<VolunteerLeaderboard />} />
               <Route path="/volunteer/notifications" element={<VolunteerNotifs />} />
               <Route path="/volunteer/profile"       element={<VolunteerProfile />} />
