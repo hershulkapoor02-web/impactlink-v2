@@ -2,27 +2,63 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import { Avatar, Alert, Spinner } from '../../components/ui/index.jsx'
+import MapPicker from '../../components/ui/MapPicker.jsx'
 import { SKILLS, AVAILABILITY_OPTIONS, formatHours } from '../../utils/helpers'
 
 export default function VolunteerProfile() {
   const { user, updateUser } = useAuth()
   const [form, setForm] = useState({
-    name: user?.name || '', bio: user?.bio || '', phone: user?.phone || '',
-    skills: user?.skills || [], availability: user?.availability || 'on_demand',
-    location: { city: user?.location?.city || '', state: user?.location?.state || '' }
+    name:         user?.name         || '',
+    bio:          user?.bio          || '',
+    phone:        user?.phone        || '',
+    skills:       user?.skills       || [],
+    availability: user?.availability || 'on_demand',
+    location: {
+      city:   user?.location?.city   || '',
+      state:  user?.location?.state  || '',
+      coords: user?.location?.coords || null,
+    },
   })
+  // coords held separately so MapPicker can be a controlled component
+  const [coords, setCoords] = useState(user?.location?.coords ? {
+    lat:   user.location.coords.lat,
+    lng:   user.location.coords.lng,
+    city:  user.location.city  || '',
+    state: user.location.state || '',
+  } : null)
+
   const [saving, setSaving] = useState(false)
   const [msg,    setMsg]    = useState(null)
 
-  const toggleSkill = s => setForm(f => ({ ...f, skills: f.skills.includes(s) ? f.skills.filter(x => x !== s) : [...f.skills, s] }))
+  const toggleSkill = s => setForm(f => ({
+    ...f,
+    skills: f.skills.includes(s) ? f.skills.filter(x => x !== s) : [...f.skills, s],
+  }))
+
+  // When map changes, sync into form.location
+  const onMapChange = c => {
+    setCoords(c)
+    setForm(f => ({
+      ...f,
+      location: {
+        city:   c.city  || f.location.city,
+        state:  c.state || f.location.state,
+        coords: { lat: c.lat, lng: c.lng },
+      },
+    }))
+  }
 
   const save = async e => {
     e.preventDefault(); setSaving(true); setMsg(null)
     try {
       const { data } = await api.put('/auth/profile', form)
-      updateUser(data.user); setMsg({ type: 'success', text: 'Profile saved!' })
-    } catch (err) { setMsg({ type: 'error', text: err.response?.data?.message || 'Save failed' }) }
-    finally { setSaving(false) }
+      updateUser(data.user)
+      setMsg({ type: 'success', text: 'Profile saved!' })
+    } catch (err) {
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Save failed' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -38,7 +74,7 @@ export default function VolunteerProfile() {
           <div className="flex gap-2 mt-2">
             <span className="badge-teal">Volunteer</span>
             {user?.tasksCompleted > 0 && <span className="badge-blue">{user.tasksCompleted} tasks</span>}
-            {user?.totalHours > 0 && <span className="badge-green">{formatHours(user.totalHours)}</span>}
+            {user?.totalHours     > 0 && <span className="badge-green">{formatHours(user.totalHours)}</span>}
           </div>
         </div>
       </div>
@@ -46,6 +82,7 @@ export default function VolunteerProfile() {
       {msg && <Alert type={msg.type} message={msg.text} onClose={() => setMsg(null)} />}
 
       <form onSubmit={save} className="space-y-5">
+        {/* Basic info */}
         <div className="surface p-6 space-y-4">
           <h3 className="section-title">Basic info</h3>
           <div className="grid grid-cols-2 gap-3">
@@ -60,38 +97,68 @@ export default function VolunteerProfile() {
           </div>
           <div>
             <label className="label">Bio</label>
-            <textarea className="input resize-none h-20" placeholder="Tell NGOs why you volunteer…" value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">City</label>
-              <input className="input" placeholder="Kolkata" value={form.location.city} onChange={e => setForm({ ...form, location: { ...form.location, city: e.target.value } })} />
-            </div>
-            <div>
-              <label className="label">State</label>
-              <input className="input" placeholder="West Bengal" value={form.location.state} onChange={e => setForm({ ...form, location: { ...form.location, state: e.target.value } })} />
-            </div>
+            <textarea className="input resize-none h-20" placeholder="Tell NGOs why you volunteer…"
+              value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} />
           </div>
         </div>
 
+        {/* Location with map */}
+        <div className="surface p-6 space-y-4">
+          <div>
+            <h3 className="section-title mb-0.5">Your location</h3>
+            <p className="text-xs text-muted-color mb-3">
+              Pinpoint your location for better task matching. Exact coordinates are only shared with coordinators for tasks you're assigned to.
+            </p>
+            <MapPicker coords={coords} onChange={onMapChange} height={220} />
+          </div>
+
+          {/* Manual city/state override */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">City (auto-filled from map)</label>
+              <input className="input" placeholder="Kolkata"
+                value={form.location.city}
+                onChange={e => setForm({ ...form, location: { ...form.location, city: e.target.value } })} />
+            </div>
+            <div>
+              <label className="label">State</label>
+              <input className="input" placeholder="West Bengal"
+                value={form.location.state}
+                onChange={e => setForm({ ...form, location: { ...form.location, state: e.target.value } })} />
+            </div>
+          </div>
+
+          {form.location?.coords?.lat && (
+            <p className="text-xs font-mono text-faint-color">
+              Precise pin: {form.location.coords.lat.toFixed(5)}°N, {form.location.coords.lng.toFixed(5)}°E
+            </p>
+          )}
+        </div>
+
+        {/* Availability */}
         <div className="surface p-6">
           <h3 className="section-title mb-1">Availability</h3>
           <p className="text-xs text-muted-color mb-4">Helps NGOs know when you can volunteer</p>
           <div className="flex flex-wrap gap-2">
             {AVAILABILITY_OPTIONS.map(o => (
               <button key={o.value} type="button" onClick={() => setForm({ ...form, availability: o.value })}
-                className={`btn btn-md ${form.availability === o.value ? 'btn-primary' : 'btn-secondary'}`}>{o.label}</button>
+                className={`btn btn-md ${form.availability === o.value ? 'btn-primary' : 'btn-secondary'}`}>
+                {o.label}
+              </button>
             ))}
           </div>
         </div>
 
+        {/* Skills */}
         <div className="surface p-6">
           <h3 className="section-title mb-1">Skills</h3>
           <p className="text-xs text-muted-color mb-4">{form.skills.length} selected — used to match you to relevant tasks</p>
           <div className="flex flex-wrap gap-2">
             {SKILLS.map(s => (
               <button key={s} type="button" onClick={() => toggleSkill(s)}
-                className={`btn btn-sm ${form.skills.includes(s) ? 'btn-primary' : 'btn-secondary'}`}>{s}</button>
+                className={`btn btn-sm ${form.skills.includes(s) ? 'btn-primary' : 'btn-secondary'}`}>
+                {s}
+              </button>
             ))}
           </div>
         </div>

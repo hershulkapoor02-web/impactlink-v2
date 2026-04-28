@@ -76,3 +76,62 @@ export function getDashboardPath(role) {
   if (role === 'super_admin')  return '/admin'
   return '/'
 }
+
+/**
+ * Haversine distance between two lat/lng pairs.
+ * Returns distance in kilometres.
+ *
+ * @param {{ lat: number, lng: number }} a
+ * @param {{ lat: number, lng: number }} b
+ * @returns {number}
+ */
+export function distanceKm(a, b) {
+  if (!a?.lat || !a?.lng || !b?.lat || !b?.lng) return Infinity
+  const R   = 6371
+  const dLat = deg2rad(b.lat - a.lat)
+  const dLng = deg2rad(b.lng - a.lng)
+  const sinLat = Math.sin(dLat / 2)
+  const sinLng = Math.sin(dLng / 2)
+  const chord = sinLat * sinLat +
+    Math.cos(deg2rad(a.lat)) * Math.cos(deg2rad(b.lat)) * sinLng * sinLng
+  return R * 2 * Math.atan2(Math.sqrt(chord), Math.sqrt(1 - chord))
+}
+
+function deg2rad(deg) { return deg * (Math.PI / 180) }
+
+/**
+ * Format a distance nicely.
+ * e.g. 0.3 → "300 m", 1.2 → "1.2 km", 50 → "50 km"
+ */
+export function fmtDistance(km) {
+  if (km === Infinity || km == null) return '—'
+  if (km < 1)  return `${Math.round(km * 1000)} m`
+  if (km < 10) return `${km.toFixed(1)} km`
+  return `${Math.round(km)} km`
+}
+
+/**
+ * Composite match score for sorting tasks (0–100).
+ * Weights: skill match 50%, proximity 30%, urgency 20%.
+ *
+ * @param {object} task
+ * @param {object} user   — must have skills[] and location.coords
+ * @returns {number}
+ */
+export function computeMatchScore(task, user) {
+  // Skill overlap
+  const userSkills = user?.skills || []
+  const taskSkills = task?.skillsRequired || []
+  const skillScore = taskSkills.length === 0
+    ? 50
+    : Math.round((taskSkills.filter(s => userSkills.includes(s)).length / taskSkills.length) * 100)
+
+  // Proximity (100 = 0 km, 0 = 50+ km)
+  const dist = distanceKm(user?.location?.coords, task?.location?.coords)
+  const proxScore = dist === Infinity ? 0 : Math.max(0, Math.round(100 - dist * 2))
+
+  // Urgency contribution
+  const urgScore = Math.round(((task?.severityScore || 1) / 5) * 100)
+
+  return Math.round(skillScore * 0.5 + proxScore * 0.3 + urgScore * 0.2)
+}

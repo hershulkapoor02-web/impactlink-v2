@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
+import MapPicker from '../../components/ui/MapPicker.jsx'
 import {
   StatCard, Spinner, EmptyState, UrgencyBadge, CategoryBadge,
   Avatar, Alert, Modal, Progress
@@ -113,13 +114,14 @@ export function OrgDashboard() {
 }
 
 // ── NGO Tasks ─────────────────────────────────────────────────────────────────
-const BLANK_TASK = { title:'', description:'', category:'other', severityScore:3, skillsRequired:[], location:{city:'',state:''}, deadline:'', scheduledDate:'', maxVolunteers:1, minVolunteers:1, durationHours:4 }
+const BLANK_TASK = { title:'', description:'', category:'other', severityScore:3, skillsRequired:[], location:{city:'',state:'',coords:null}, deadline:'', scheduledDate:'', maxVolunteers:1, minVolunteers:1, durationHours:4 }
 
 export function OrgTasks() {
   const [tasks, setTasks]     = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm]       = useState(BLANK_TASK)
+  const [coords, setCoords]   = useState(null)
   const [skillInput, setSkillInput] = useState('')
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState('')
@@ -129,9 +131,14 @@ export function OrgTasks() {
 
   const addSkill = e => { if (e.key === 'Enter' && skillInput.trim()) { e.preventDefault(); setForm(f => ({ ...f, skillsRequired: [...new Set([...f.skillsRequired, skillInput.trim()])] })); setSkillInput('') } }
 
+  const onMapChange = c => {
+    setCoords(c)
+    setForm(f => ({ ...f, location: { ...f.location, city: c.city||'', state: c.state||'', coords: { lat: c.lat, lng: c.lng } } }))
+  }
+
   const create = async e => {
     e.preventDefault(); setSaving(true); setError('')
-    try { await api.post('/tasks', form); setForm(BLANK_TASK); setShowForm(false); load() }
+    try { await api.post('/tasks', form); setForm(BLANK_TASK); setCoords(null); setShowForm(false); load() }
     catch (err) { setError(err.response?.data?.message || 'Failed to create') }
     finally { setSaving(false) }
   }
@@ -185,8 +192,12 @@ export function OrgTasks() {
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="col-span-2 md:col-span-4">
+                <label className="label">Location — pin the task site</label>
+                <MapPicker coords={coords} onChange={onMapChange} height={200} />
+              </div>
               <div>
-                <label className="label">City</label>
+                <label className="label">City (auto-filled)</label>
                 <input className="input" value={form.location.city} onChange={e => setForm({...form,location:{...form.location,city:e.target.value}})} />
               </div>
               <div>

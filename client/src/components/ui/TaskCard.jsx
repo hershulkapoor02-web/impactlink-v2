@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { UrgencyBadge, CategoryBadge, MatchScore, Avatar } from '../ui/index.jsx'
-import { fmtDate, relativeTime } from '../../utils/helpers'
+import { fmtDate, relativeTime, distanceKm, fmtDistance } from '../../utils/helpers'
+import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 
 export default function TaskCard({ task, userRole, userId, onUpdate, compact = false }) {
+  const { user } = useAuth()
   const [busy, setBusy] = useState(false)
-  const myApp = task.applicants?.find(a => (a.user?._id || a.user) === userId)
+
+  const myApp     = task.applicants?.find(a => (a.user?._id || a.user) === userId)
   const isAssigned = task.assignedVolunteers?.some(v => (v._id || v) === userId)
-  const canApply = userRole === 'volunteer' && task.status === 'open' && !myApp && !isAssigned
+  const canApply  = userRole === 'volunteer' && task.status === 'open' && !myApp && !isAssigned
+
+  // Distance from volunteer's pinned location to task location
+  const userCoords = user?.location?.coords
+  const taskCoords = task?.location?.coords
+  const km = distanceKm(userCoords, taskCoords)
+  const showDistance = km !== Infinity
 
   const apply = async () => {
     setBusy(true)
@@ -56,13 +65,25 @@ export default function TaskCard({ task, userRole, userId, onUpdate, compact = f
 
       {/* Meta */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-faint-color">
-        {task.orgId?.name     && <span>🏢 {task.orgId.name}</span>}
-        {task.location?.city  && <span>📍 {task.location.city}</span>}
-        {task.durationHours   && <span>⏱ {task.durationHours}h</span>}
-        {task.deadline        && <span>⏰ Due {fmtDate(task.deadline)}</span>}
-        {task.scheduledDate   && <span>📅 {fmtDate(task.scheduledDate)}</span>}
+        {task.orgId?.name    && <span>🏢 {task.orgId.name}</span>}
+        {task.location?.city && <span>📍 {task.location.city}</span>}
+        {showDistance        && (
+          <span className={km < 5 ? 'text-teal-500 font-medium' : ''}>
+            🗺 {fmtDistance(km)} away
+          </span>
+        )}
+        {task.durationHours  && <span>⏱ {task.durationHours}h</span>}
+        {task.deadline       && <span>⏰ Due {fmtDate(task.deadline)}</span>}
+        {task.scheduledDate  && <span>📅 {fmtDate(task.scheduledDate)}</span>}
         <span className="ml-auto">{relativeTime(task.createdAt)}</span>
       </div>
+
+      {/* Exact coords — only shown to coordinators */}
+      {userRole === 'coordinator' && taskCoords?.lat && (
+        <p className="text-[10px] font-mono text-faint-color">
+          📌 {taskCoords.lat.toFixed(5)}°N, {taskCoords.lng.toFixed(5)}°E
+        </p>
+      )}
 
       {/* Volunteers progress */}
       {!compact && (
