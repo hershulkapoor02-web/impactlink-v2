@@ -73,8 +73,8 @@ export default function Sidebar({ unread = 0, onClose }) {
       {/* Logo */}
       <div className="h-16 flex items-center px-5 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2.5">
-          <div className={`w-8 h-8 rounded-xl ${cfg.color} flex items-center justify-center shadow-glow-sm`}>
-            <span className="text-white font-bold text-xs">IL</span>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/Logo.png" alt="ImpactLink Logo" className="w-8 h-8 object-contain" />
           </div>
           <div>
             <span className="font-bold text-base-color text-sm leading-none block">ImpactLink</span>

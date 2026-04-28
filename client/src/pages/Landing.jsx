@@ -21,8 +21,8 @@ export default function Landing() {
       <nav className="sticky top-0 z-50 h-16 flex items-center px-6 md:px-10"
         style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2.5 flex-1">
-          <div className="w-8 h-8 rounded-xl bg-teal-500 flex items-center justify-center shadow-glow-sm">
-            <span className="text-white font-bold text-xs">IL</span>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/Logo.png" alt="ImpactLink Logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="font-bold text-base-color text-lg tracking-tight">ImpactLink</span>
         </div>
