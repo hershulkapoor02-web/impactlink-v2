@@ -28,47 +28,12 @@ export function AuthProvider({ children }) {
        .finally(() => setLoading(false))
   }, [token, logout])
 
-  const login = async (email, password) => {
-    const r = await api.post('/auth/login', { email, password })
-    persist(r.data.token, r.data.user)
-    return r.data.user
-  }
-
-  const register = async (payload) => {
-    const r = await api.post('/auth/register', payload)
-    persist(r.data.token, r.data.user)
-    return r.data.user
-  }
-
-  const updateUser = (updates) => {
-    const u = { ...user, ...updates }
-    setUser(u)
-    localStorage.setItem('il_user', JSON.stringify(u))
-  }
-
-  /**
-   * Save the user's precise location coords.
-   * Merges into the user's location object and POSTs to /auth/profile.
-   *
-   * @param {{ lat: number, lng: number, city?: string, state?: string }} coords
-   */
-  const saveLocation = async (coords) => {
-    const location = {
-      city:   coords.city  || user?.location?.city  || '',
-      state:  coords.state || user?.location?.state || '',
-      coords: { lat: coords.lat, lng: coords.lng },
-    }
-    try {
-      const { data } = await api.put('/auth/profile', { location })
-      updateUser(data.user)
-    } catch {
-      // Optimistically update locally even if API call fails
-      updateUser({ location })
-    }
-  }
+  const login    = async (email, password) => { const r = await api.post('/auth/login',    { email, password });   persist(r.data.token, r.data.user); return r.data.user }
+  const register = async (payload)          => { const r = await api.post('/auth/register', payload);             persist(r.data.token, r.data.user); return r.data.user }
+  const updateUser = (updates) => { const u = { ...user, ...updates }; setUser(u); localStorage.setItem('il_user', JSON.stringify(u)) }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUser, saveLocation }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
